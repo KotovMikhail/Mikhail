@@ -50,7 +50,7 @@ var TYPES_OF_HOUSES = {
   }
 };
 
-var rooms = {
+var Rooms = {
   1: {
     enabled: ['1'],
     textError: 'не более одного гостя'
@@ -98,7 +98,7 @@ var roomNumber = mapForm.querySelector('#room_number');
 var capacity = mapForm.querySelector('#capacity');
 var houseType = mapForm.querySelector('#type');
 var housePrice = mapForm.querySelector('#price');
-var formSubmitElement = mapForm.querySelector('.ad-form__submit');
+var formSubmit = mapForm.querySelector('.ad-form__submit');
 
 var getUnique = function (titles) {
   var uniqueEl = titles[getRandom(0, titles.length)];
@@ -133,7 +133,7 @@ var createObject = function () {
       title: getUnique(TITLES),
       address: locationX + ', ' + locationY,
       price: getRandom(MIN_PRICE, MAX_PRICE),
-      type: TYPES[getRandom(0, TYPES.length + 1)],
+      type: TYPES[getRandom(0, TYPES.length)],
       rooms: getRandom(MIN_ROOM, MAX_ROOM + MIN_ROOM),
       guests: getRandom(MIN_GUESTS, MAX_GUESTS + 1),
       checkin: CHECK_TIMES[getRandom(0, CHECK_TIMES.length)],
@@ -209,10 +209,9 @@ var getCardData = function (item) {
     roomPhrase = ' комнаты для ';
   }
 
-  mapSection.insertBefore(cardItem, mapPinList);
   cardItem.querySelector('.popup__title').textContent = item.offer.title;
   cardItem.querySelector('.popup__text--address').textContent = item.offer.address;
-  cardItem.querySelector('.popup__text--price').innerHTML = item.offer.price + '&#x20bd/ночь';
+  cardItem.querySelector('.popup__text--price').textContent = item.offer.price + '\u20BD' + '/ночь';
   cardItem.querySelector('.popup__type').textContent = TYPES_OF_HOUSES[item.offer.type].translate;
   cardItem.querySelector('.popup__text--capacity').textContent = roomNum + roomPhrase + ' для ' + guestNum + guestPhrase;
   cardItem.querySelector('.popup__text--time').textContent = 'Заезд после ' + item.offer.checkin + ' выезд после ' + item.offer.checkout;
@@ -241,6 +240,7 @@ window.addEventListener('load', function () {
   toggleDisabled(true, selects);
   housePrice.setAttribute('placeholder', '1000');
   inputAddress.value = inputAddressLoad;
+  mainPin.addEventListener('mouseup', onButtonMouseUp);
 });
 
 var onButtonMouseUp = function () {
@@ -319,31 +319,7 @@ mapSection.addEventListener('click', function (evt) {
   showCard(evt);
 });
 
-mainPin.addEventListener('mouseup', onButtonMouseUp);
-
 // 4.2 задание - - - - - - - - - - - - - - -- -
-
-var checkTitleValidity = function () {
-  var validity = title.validity;
-  if (validity.tooShort) {
-    title.setCustomValidity('Заголовок должен состоять минимум из 30 символов');
-  } else if (validity.tooLong) {
-    title.setCustomValidity('Заголовок не должен превышать 100 символов');
-  } else if (validity.valueMissing) {
-    title.setCustomValidity('Обязательное поле');
-  } else {
-    title.setCustomValidity('');
-  }
-};
-
-var checkTitleLength = function (evt) {
-  var target = evt.target;
-  if (target.value.length < MIN_LENGTH) {
-    target.setCustomValidity('Заголовок должен состоять минимум из 30 символов');
-  } else {
-    target.setCustomValidity('');
-  }
-};
 
 houseType.addEventListener('change', function () {
 
@@ -354,19 +330,16 @@ houseType.addEventListener('change', function () {
 });
 
 var options = capacity.querySelectorAll("option");
-var selectType = rooms[roomNumber.value];
-roomNumber.addEventListener("change", function () {
 
+
+roomNumber.addEventListener("change", function () {
+  var selectType = Rooms[roomNumber.value];
   setOptions(selectType);
   setValidity(selectType);
-  console.log(selectType);
-  console.log(roomNumber.value);
 });
 
 var setOptions = function (selectType) {
-
   var checkValidity = function (value) {
-    console.log(selectType.enabled.indexOf(value) === -1);
     return selectType.enabled.indexOf(value) === -1;
   };
 
@@ -376,14 +349,10 @@ var setOptions = function (selectType) {
 };
 
 var setValidity = function (selectType) {
-
   var isValid = selectType.enabled.indexOf(capacity.value) !== -1;
-  console.log(selectType.enabled.indexOf(capacity.value));
   var customValidity = isValid ? "" : selectType.textError;
   capacity.setCustomValidity(customValidity);
 };
-
-
 
 capacity.addEventListener('change', function () {
   capacity.setCustomValidity('');
@@ -396,17 +365,3 @@ var onTimeInChange = function () {
 var onTimeOutChange = function () {
   timeIn.value = timeOut.value;
 };
-
-title.addEventListener('invalid', function () {
-  checkTitleValidity();
-});
-
-title.addEventListener('input', function (evt) {
-  checkTitleLength(evt);
-});
-
-
-// form.addEventListener('submit', function (event) {
-
-//   event.preventDefault();
-// });
