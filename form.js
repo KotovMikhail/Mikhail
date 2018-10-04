@@ -14,7 +14,9 @@
   var errorPopup = window.elements.errorTemplate.cloneNode(true);
   var errorButton = errorPopup.querySelector('.error__button');
   var resetButton = window.elements.mapForm.querySelector('.ad-form__reset');
-
+  var featureCheckboxes = document.querySelectorAll('input[type=checkbox]');
+  var formDescription = window.elements.mapForm.querySelector('#description');
+  var titleAdvert = window.elements.mapForm.querySelector('#title');
 
   var onTimeInChange = function () {
     timeOut.value = timeIn.value;
@@ -63,50 +65,118 @@
     inputAddress.setAttribute('value', parseInt(window.elements.mainPin.style.left, 10) + ', ' + parseInt(window.elements.mainPin.style.top, 10));
   };
 
-  window.toggleDisabled = function (isDisabled, nodes) {
-    for (var i = 0; i < nodes.length; i++) {
-      nodes[i].disabled = isDisabled;
+
+
+  var removeSuccessPopup = function () {
+    if (successPopup) {
+      window.elements.mapSection.removeChild(successPopup);
     }
-  };
+    document.removeEventListener('keydown', onSuccessEscPress);
+    document.removeEventListener('click', onSuccessButtonClick);
+  }
 
   var onSuccessEscPress = function (evt) {
-    if (evt.keyCode === window.constants.ESC_KEYCODE || evt.which === 1) {
-      successPopup.classList.add('hidden');
-      document.removeEventListener('keydown', onSuccessEscPress);
-      document.removeEventListener('click', onSuccessEscPress);
+    if (evt.keyCode === window.constants.ESC_KEYCODE) {
+      removeSuccessPopup();
     }
   };
 
-  var onLoadSuccess = function () {
-    successPopup.querySelector('.success__message');
-    window.elements.mapSection.appendChild(successPopup);
+  var onSuccessButtonClick = function () {
+    removeSuccessPopup();
   };
 
-  var onLoadError = function (errorMessage) {
+  var onUploadSuccess = function () {
+    window.elements.mapSection.appendChild(successPopup);
+    onRresetClick();
+    document.addEventListener('keyup', onSuccessEscPress);
+    document.addEventListener('click', onSuccessButtonClick);
+  };
+
+  var onEscErrorKeyup = function (evt) {
+    if (evt.keyCode === window.constants.ESC_KEYCODE) {
+      removeErrorListeners();
+    }
+  };
+
+  var onButtonErrorKyeup = function (evt) {
+    if (evt.keyCode === window.constants.ENTER_KEYCODE) {
+      removeErrorListeners();
+    }
+  };
+
+  var onButtonErrorClick = function () {
+    removeErrorListeners();
+  };
+
+  var removeErrorListeners = function () {
+    window.elements.mapSection.removeChild(errorPopup);
+    errorButton.removeEventListener('keyup', onButtonErrorKyeup);
+    document.removeEventListener('keyup', onEscErrorKeyup);
+    document.removeEventListener('click', onButtonErrorClick);
+  }
+
+  var onUploadError = function (errorMessage) {
     errorPopup.querySelector('.error__message').textContent = errorMessage;
     errorButton.focus();
     errorButton.setAttribute('tabindex', '0');
     errorButton.style.border = '2px solid yellow';
     window.elements.mapSection.appendChild(errorPopup);
+
+    errorButton.addEventListener('keyup', onButtonErrorKyeup);
+    document.addEventListener('keyup', onEscErrorKeyup);
+    document.addEventListener('click', onButtonErrorClick);
   };
 
   window.elements.mapForm.addEventListener('submit', function (evt) {
-    window.backend.upload(new FormData(window.elements.mapForm), onLoadSuccess, onLoadError);
-    document.addEventListener('keydown', onSuccessEscPress);
-    document.addEventListener('click', onSuccessEscPress);
+    window.backend.upload(new FormData(window.elements.mapForm), onUploadSuccess, onUploadError);
     evt.preventDefault();
   });
 
-  var featuresCeckboxes = document.querySelectorAll('input[type=checkbox]');
+  var returnAddress = function () {
+    window.elements.mainPin.style.left = window.constants.PIN_LEFT_COORD + 'px';
+    window.elements.mainPin.style.top = window.constants.PIN_TOP_COORD + 'px';
+  };
+
+  var clearMap = function () {
+    var pins = window.elements.mapPinList.querySelectorAll('.map__pin:not(.map__pin--main');
+    for (var i = 0; i < pins.length; i++) {
+      pins[i].remove(pins[i]);
+    }
+  };
 
   var onRresetClick = function () {
-    allInputs.forEach(function(element){
-      if(element.hasAttribute("checked")) {
-        element.removeAttribute("checked");
-      }
-    })
-  } 
+    var openedCard = window.elements.mapSection.querySelector('.map__card');
 
+    featureCheckboxes.forEach(function (element) {
+      if (element.checked) {
+        element.checked === false;
+      }
+    });
+
+    if (openedCard) {
+      window.activeCardId = null;
+      window.currentPin = null;
+      window.currentCard = null;
+      window.elements.mapSection.removeChild(openedCard);
+    }
+
+    titleAdvert.value = '';
+    formDescription.value = '';
+    housePrice.setAttribute('placeholder', window.constants.MIN_PRICE);
+    housePrice.value = '';
+
+    window.elements.mapSection.classList.add('map--faded');
+    window.elements.advertForm.classList.add('ad-form--disabled');
+    window.util.toggleDisabled(true, window.elements.fieldsets);
+    window.util.toggleDisabled(true, window.elements.filterSelects);
+    capacity.selectedIndex = 2;
+    roomNumber.selectedIndex = 0;
+    console.log()
+    clearMap();
+    returnAddress();
+    window.setAddress();
+    window.elements.mainPin.addEventListener('mouseup', window.onButtonMouseUp);
+  };
 
   resetButton.addEventListener('click', onRresetClick);
 

@@ -59,8 +59,6 @@
     document.addEventListener('mouseup', onMouseUp);
   });
 
-
-
   var createPins = function (icons) {
     for (var i = 0; i < icons.length; i++) {
       var pinElem = window.elements.pinTemplate.cloneNode(true);
@@ -74,59 +72,67 @@
     window.elements.mapPinList.appendChild(window.elements.fragmentPins);
   };
 
-  var onButtonMouseUp = function () {
+  window.onButtonMouseUp = function () {
+
+    var onLoadSuccess = function (advert) {
+      window.advert = advert;
+      createPins(window.advert);
+    };
+
+    window.backend.load(onLoadSuccess, onLoadError);
+
     window.elements.mapSection.classList.remove('map--faded');
     window.elements.advertForm.classList.remove('ad-form--disabled');
-    createPins(window.advert);
-    window.toggleDisabled(false, window.elements.fieldsets);
-    window.toggleDisabled(false, window.elements.filterSelects);
+    window.util.toggleDisabled(false, window.elements.fieldsets);
+    window.util.toggleDisabled(false, window.elements.filterSelects);
     removeOnButtonMouseUp();
     window.setAddress();
   };
 
-  window.addEventListener('load', function () {
-    window.toggleDisabled(true, window.elements.fieldsets);
-    window.toggleDisabled(true, window.elements.filterSelects);
-    window.elements.mainPin.addEventListener('mouseup', onButtonMouseUp);
-    window.setAddress();
-  });
-
   var removeOnButtonMouseUp = function () {
-    window.elements.mainPin.removeEventListener('mouseup', onButtonMouseUp);
+    window.elements.mainPin.removeEventListener('mouseup', window.onButtonMouseUp);
   };
 
-  var onMessageEscPress = function (evt) {
-    if (evt.keyCode === window.constants.ESC_KEYCODE || evt.which === 1) {
-      console.log('клик')
-      errorPopup.classList.add('hidden');
-      document.removeEventListener('keydown', onMessageEscPress);
-      document.removeEventListener('click', onMessageEscPress);
+  var onEscErrorPress = function (evt) {
+    if (evt.keyCode === window.constants.ESC_KEYCODE) {
+      removeListeners();
     }
   };
 
-  var onButtonErrorClick = function (evt) {
-    if (evt.keyCode === window.constants.ENTER_KEYCODE || evt.which === 1) {
-      errorPopup.classList.add('hidden');
-      errorButton.removeEventListener('click', onButtonErrorClick)
+  var onEnterErrorClick = function (evt) {
+    if (evt.keyCode === window.constants.ENTER_KEYCODE) {
+      removeListeners();
     }
   };
-  
-  var onLoadSuccess = function (advert) {
-    window.advert = advert;
+
+  var onButtonErrorClick = function () {
+    removeListeners();
   };
+
+  var removeListeners = function () {
+    window.elements.mapSection.removeChild(errorPopup);
+    errorButton.removeEventListener('keyup', onEnterErrorClick);
+    document.removeEventListener('keyup', onEscErrorPress);
+    document.removeEventListener('click', onButtonErrorClick);
+  }
 
   var onLoadError = function (errorMessage) {
     errorPopup.querySelector('.error__message').textContent = errorMessage;
-    errorButton.addEventListener('click', onButtonErrorClick);
-    errorButton.focus();
     errorButton.setAttribute('tabindex', '0');
-    errorButton.style.border = '2px solid yellow';
 
-    document.addEventListener('keydown', onMessageEscPress);
+    errorButton.addEventListener('keyup', onEnterErrorClick);
+    document.addEventListener('keyup', onEscErrorPress);
     document.addEventListener('click', onButtonErrorClick);
-    window.elements.mapSection.appendChild(errorPopup);
-  }
 
-  window.backend.load(onLoadSuccess, onLoadError);
+    window.elements.mapSection.appendChild(errorPopup);
+  };
+
+  window.addEventListener('load', function () {
+    window.util.toggleDisabled(true, window.elements.fieldsets);
+    window.util.toggleDisabled(true, window.elements.filterSelects);
+    window.elements.mainPin.addEventListener('mouseup', window.onButtonMouseUp);
+    window.setAddress();
+  });
+
 
 })();
